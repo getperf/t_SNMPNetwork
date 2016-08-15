@@ -1,0 +1,13 @@
+/analysis/
+/summary/
+/storage/
+/html/
+/node/
+/view/
+/t/
+lib/Getperf/Command/Master/SNMPNetworkConfig.pm
+lib/Getperf/Command/Master/SNMPNetwork.pm
+site_info.txt
+.pid
+.stdout
+.stderr
