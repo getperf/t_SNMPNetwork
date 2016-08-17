@@ -5,7 +5,7 @@
   "graphs": [
     {
       "graph_template": "SNMPNetwork - Port Traffic",
-      "graph_tree": "/LAN/<node_path>/MBs",
+      "graph_tree": "/LAN/Detail/<node_path>/MBs",
       "graph_title": "Network Port - <node> - <device> - Traffic",
       "chart_style": "line1",
       "graph_items": ["ifInOctets", "ifOutOctets"],
@@ -15,7 +15,7 @@
     },
     {
       "graph_template": "SNMPNetwork - Port Packets",
-      "graph_tree": "/LAN/<node_path>/packets",
+      "graph_tree": "/LAN/Detail/<node_path>/packets",
       "graph_title": "Network Port - <node> - <device> - Packet/sec",
       "chart_style": "line1",
       "graph_items": ["ifInUcastPkts", "ifOutUcastPkts", "ifInNUcastPkts", "ifOutNUcastPkts"],
@@ -25,7 +25,7 @@
     },
     {
       "graph_template": "SNMPNetwork - Port Errors",
-      "graph_tree": "/LAN/<node_path>/errors",
+      "graph_tree": "/LAN/Detail/<node_path>/errors",
       "graph_title": "Network Port - <node> - <device> - Error Packet/sec",
       "chart_style": "line1",
       "graph_items": ["ifInDiscards", "ifInErrors", "ifOutDiscards", "ifOutErrors"],

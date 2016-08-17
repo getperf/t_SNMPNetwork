@@ -10,6 +10,7 @@
       "graph_type": "multi",
       "legend_max": 15,
       "chart_style": "stack",
+      "total_data_source": "Total All Data Sources",
       "graph_items": ["ifInOctets"],
       "vertical_label": "byte/s",
       "datasource_title": "Network Main Port - <node> - Traffic Received - <device>"
@@ -21,6 +22,7 @@
       "graph_type": "multi",
       "legend_max": 15,
       "chart_style": "stack",
+      "total_data_source": "Total All Data Sources",
       "graph_items": ["ifOutOctets"],
       "vertical_label": "byte/s",
       "datasource_title": "Network Main Port - <node> - Traffic Sent - <device>"

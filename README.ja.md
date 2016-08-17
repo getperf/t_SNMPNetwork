@@ -9,6 +9,11 @@ SNMP 統計を用いてネットワーク機器のパフォーマンス情報を
 **注意事項**
 
 1. SNMP統計をリモートで採取する Linux 用エージェントが別途必要で、監視サーバ上で Linux エージェントを稼働します。
+2. snmpwalk, snmpget コマンドを使用するため、エージェントに以下 net-snmp パッケージの追加が必要になります。
+
+```
+sudo -E yum -y install net-snmp net-snmp-utils
+```
 
 ファイル構成
 -------
@@ -25,8 +30,6 @@ SNMP 統計を用いてネットワーク機器のパフォーマンス情報を
 
 メトリック
 -----------
-
-TTSPパフォーマンス統計グラフなどの監視項目定義は以下の通りです。
 
 |          Key           |                             Description                              |
 |------------------------|----------------------------------------------------------------------|
@@ -48,9 +51,9 @@ Git Hub からプロジェクトをクローンします
 	cd t_SNMPNetwork
 	initsite --template .
 
-Cacti グラフテンプレート作成スクリプトを順に実行します(1行目がArrayFort、2行目がSC3000)
+Cacti グラフテンプレート作成スクリプトを順に実行します
 
-	./script/create_graph_template.sh
+	./script//create_graph_template_SNMPNetwork.sh
 
 Cacti グラフテンプレートをファイルにエクスポートします
 
@@ -83,27 +86,41 @@ Cacti グラフテンプレートをインポートします。監視対象の�
 エージェントセットアップ
 --------------------
 
-以下のエージェント採取設定ファイルをエージェントホームの conf ディレクトリの下(/home/{OSユーザ}/ptune/conf/)にコピーして、エージェントを再起動してください。
+以下のエージェント採取スクリプトを、エージェントの script ディレクトリの下(/home/{OSユーザ}/ptune/script/)にコピーします。
+
+	{サイトホーム}/lib/agent/SNMPNetwork/script/
+
+同様に以下の conf 下の設定ファイルを、(/home/{OSユーザ}/ptune/conf/)にコピーします。
 
 	{サイトホーム}/lib/agent/SNMPNetwork/conf/SNMPNetwork.ini
 
-監視対象サーバから直接採取する場合と、リモートで採取する場合で実行オプションの変更が必要になります。
-以下例はリモート採取の設定となります。
+監視対象のネットワーク機器の構成情報をチェックします。コピーしたスクリプト check_snmp.pl に -p オプションを付けて実行します。
 
-	;---------- Monitor command config (SNMPNetwork Storage) -----------------------------------
-	STAT_ENABLE.SNMPNetwork = true
-	STAT_INTERVAL.SNMPNetwork = 300
-	STAT_TIMEOUT.SNMPNetwork = 340
-	STAT_MODE.SNMPNetwork = concurrent
+	cd ~/ptune/script
+	./check_snmp.pl -p
 
-	STAT_CMD.SNMPNetwork = '_script_/get_snmp_SNMPNetwork.pl -i 60 -n 5 -c community_name -s 192.168.0.1',   CL-SNMPNetwork-C215A/get_snmp_SNMPNetwork.txt
+監視対象機器のSNMP接続情報を入力してください。実行すると、以下の結果ファイルが出力されます。
+
+|   ファイル名    |                              定義                             |
+|-----------------|---------------------------------------------------------------|
+| check_snmp.yaml | 監視対象ネットワークの構成情報                                |
+| check_snmp.cmd  | エージェント設定ファイル SNMPNetwork.ini のコマンド定義ひな形 |
+
+check\_snmp.cmd　の結果を参考にして、 SNMPNetwork.ini を編集してください。 check\_snmp.cmd　は全てのネットワークポートを監視対象としているため、不要なポートを取り除くなど必要に応じて編集してください。
+
+設定内容を反映するため、エージェントを再起動してください。
 
 データ集計のカスタマイズ
 --------------------
 
-上記エージェントセットアップ後、データが集計されると、サイトホームディレクトリの lib/Getperf/Command/Master/ の下に SNMPNetwork.pm ファイルが生成されます。
-本ファイルは監視対象ストレージのマスター定義ファイルで、ストレージのコントローラ、LUN、Raidグループの用途を記述します。
-同ディレクトリ下の SNMPNetwork.pm_sample を例にカスタマイズしてください。
+上記エージェントセットアップ後、データが集計されると、サイトホームディレクトリの lib/Getperf/Command/Master/ の下に SNMPNetworkConfig.pm ファイルが生成されます。
+本ファイルは監視対象ネットワークのマスター定義ファイルで、ネットワーク機器、ネットワークポートの用途を記述します。
+同ディレクトリ下の SNMPNetworkConfig.pm_sample を例にカスタマイズしてください。
+
+**注意事項**
+
+同様に、SNMPNetwork ドメインのマスター定義ファイル SNMPNetwork.pm が自動生成されますが、本スクリプトはデータ集計スクリプトからのアクセスはありません。
+マスターの定義は、上記　SNMPNetworkConfig.pm　を使用して下さい。
 
 グラフ登録
 -----------------
@@ -111,7 +128,7 @@ Cacti グラフテンプレートをインポートします。監視対象の�
 上記エージェントセットアップ後、データ集計が実行されると、サイトホームディレクトリの node の下にノード定義ファイルが出力されます。
 出力されたファイル若しくはディレクトリを指定してcacti-cli を実行します。
 
-	cacti-cli node/SNMPNetwork/{ストレージノード}/
+	cacti-cli node/SNMPNetwork/{ネットワークノード}/
 
 AUTHOR
 -----------
