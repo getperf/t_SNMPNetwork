@@ -1,84 +1,93 @@
-Toshiba Total Storage Platform (TTSP) monitoring template
+
+SNMP network monitoring template
 ===============================================
 
-TTSP monitoring
--------------
+SNMP network monitoring
+-------------------
 
-Toshiba storage support utility provided, the tsuacs command (aeuacs in the case of ArrayFort)
-Run and monitor the performance statistics of storage. This template is intended for the following storage.
-
-* ArrayFort series
-* SC3000 Series
-
-For configurations storage and servers are directly connected to the local information collected by the server.
-If the remote in that can be connected to the storage, and the remote in the information collected to specify the IP address of the storage controller.
+Collect the performance information of network equipment using the SNMP statistics. The collected data is aggregated monitoring the server side and the graph registration.
 
 **Notes**
 
-1. Information collected by the acs command is based, different sampling method FL6000 (Violin), NH3000 (NAS-GW) will be another template.
-2. You will need the Toshiba storage support utility on the server.
+1. SNMP statistics remote in a separate requirements of the Linux for the agent to be collected, and then running the Linux agent on the monitored server.
+2. snmpwalk, in order to use the snmpget command, you will need the following additional net-snmp package to the agent.
+
+```
+sudo -E yum -y install net-snmp net-snmp-utils
+```
 
 File organization
 -------
 
 Necessary configuration files to the template is as follows.
 
-| Directory | file name | Applications | Remarks |
-| -------------------------------- | ---------------- -------------- | ----------------------------------- ---- | ---------------- |
-| Lib / agent / TTSP / conf / | ini file | agent collecting configuration file | |
-| Lib / Getperf / Command / Site / TTSP / | pm file | data aggregation script | |
-| Lib / graph / [ArrayFort, SC3000] / | json file | graph template registration rules | customization |
-| Lib / cacti / template / 0.8.8g / | xml file | Cacti template export file | |
-| Script / | create_graph_template__af.sh | graph template registration script | for ArrayFort |
-| | Create_graph_template__sc.sh | | for the SC3000 |
+|               Directory               |        file name         |             Applications            |
+|---------------------------------------|--------------------------|-------------------------------------|
+| lib/agent/SNMPNetwork/conf/           | ini file                 | agent collecting configuration file |
+| lib/agent/SNMPNetwork/script/         | get snmp module          | agent collected script              |
+| lib/Getperf/Command/Site/SNMPNetwork/ | pm file                  | data aggregation script             |
+| lib/graph/SNMPNetwork/                | json file                | graph template registration rules   |
+| lib/cacti/template/0.8.8g/            | xml file                 | Cacti template export file          |
+| Script /                              | create_graph_template.sh | graph template registration script  |
 
 Install
 =====
 
-Build TTSP template
+Build SNMPNetwork template
 -------------------
 
 Clone the project from Git Hub
 
-    (Git clone to project replication)
+```
+(Git clone to project replication)
+```
 
 Go to the project directory, Initialize the site with the template options.
 
-    cd t_TTSP
-    initsite --template .
+```
+cd t_SNMPNetwork
+initsite --template .
+```
 
-Run the Cacti graph templates created scripts in order. The first line is ArrayFort series, the second line will be the SC3000 series of graph templates.
+Run the Cacti graph templates created scripts in order.
 
-    ./script/create_graph_template__af.sh
-    ./script/create_graph_template__sc.sh
+```
+./script/create_graph_template.sh
+```
 
 Export the Cacti graph templates to file.
 
-    cacti-cli --export ArrayFort
-    cacti-cli --export SC3000
+```
+cacti-cli --export SNMPNetwork
+```
 
 Aggregate script, graph registration rules, and archive the export file set Cacti graph templates.
 
-    sumup --export=TTSP --archive=$GETPERF_HOME/var/template/archive/config-TTSP.tar.gz
+```
+sumup --export=SNMPNetwork --archive=$GETPERF_HOME/var/template/archive/config-SNMPNetwork.tar.gz
+```
 
-Import of TTSP template
+Import of SNMPNetwork template
 ---------------------
 
 Import the archive file that you created in the previous to the monitoring site
 
-    cd {monitoring site home}
-    sumup --import=TTSP --archive=$GETPERF_HOME/var/template/archive/config-TTSP.tar.gz
+```
+cd {monitoring site home}
+sumup --import=SNMPNetwork --archive=$GETPERF_HOME/var/template/archive/config-SNMPNetwork.tar.gz
+```
 
 Import the Cacti graph templates. Please select a template in accordance with the monitored storage
 
-    # Imported into the lib/cacti/template/0.8.8g/cacti-host-template-ArrayFort.xml
-    cacti-cli --import ArrayFort
-    # Imported into the lib/cacti/template/0.8.8g/cacti-host-template-SC3000.xml
-    cacti-cli --import SC3000
+```
+cacti-cli --import SNMPNetwork
+```
 
 To reflect the imported aggregate script, and then restart the counting daemon
 
-    sumup restart
+```
+sumup restart
+```
 
 how to use
 =============
@@ -86,23 +95,42 @@ how to use
 Agent Setup
 --------------------
 
-The following agent collecting configuration file and copy it to the monitored server, please re-start the agent.
+The following agent collected script, and copy it to the bottom of the agent of the script directory (/ home/{OS user}/ptune/script /).
 
-    # In the case of Array Fort
-    {Site home}/lib/agent/TTSP/conf/ArrayFort.ini
-    # In the case of SC3000
-    {site home}/lib/agent/TTSP/conf/SC3000.ini
+```
+{Site home}/lib/agent/SNMPNetwork/script/
+```
 
-SC3000.ini will be set for the remote collection. Please specify the IP address of the storage in the example as collection command execution option of following.
+Similarly, the configuration file under the following conf, and copy it to the (/ home/{OS user}/ptune/conf /).
 
-STAT_CMD.TTSP = 'sudo /usr/local/TSBtsu/bin/tsuacs -h {storage IP address} -T 60 -n 5 -all', {storage IP address}/tsuacs.txt
+```
+{Site home} /lib/agent/SNMPNetwork/conf/SNMPNetwork.ini
+```
+
+Check the configuration information of the network devices to be monitored. To copy the script check_snmp.pl to run with the -p option.
+
+```
+cd ~/ptune/script
+./check_snmp.pl -p
+```
+
+Please enter the SNMP connection information of the monitored equipment. When you run, the following result files.
+
+|    File name    |                               Definition                               |
+|-----------------|------------------------------------------------------------------------|
+| Check_snmp.yaml | of the monitored network configuration information                     |
+| Check_snmp.cmd  | agent configuration command definition stationery file SNMPNetwork.ini |
+
+The results of the check \ _snmp.cmd by reference to, please edit the SNMPNetwork.ini. check \ _snmp.cmd because you have all of the network port to monitor, please edit if necessary, such as by removing the unnecessary ports.
+
+To reflect the settings, please restart the agent.
 
 Customization of data aggregation
 --------------------
 
-After the agent setup, and data aggregation is performed, site home directory of the lib / Getperf / Command / Master / TTSP.pm file under is output.
-This script is the master definition of monitored storage, please edit the TTSP.pm_sample under the same directory as an example.
-Storage controller, LUN, describes the Raid group applications. Even without the editing of TTSP.pm, data is aggregated.
+After the agent setup, and data aggregation is performed, site home directory of the lib/Getperf/Command/Master/SNMPNetwork.pm file under is output.
+This script is the master definition of monitored storage, please edit the SNMPNetwork.pm_sample under the same directory as an example.
+Storage controller, LUN, describes the Raid group applications. Even without the editing of SNMPNetwork.pm, data is aggregated.
 
 Graph registration
 -----------------
@@ -110,7 +138,9 @@ Graph registration
 After the agent setup, and data aggregation is performed, site node definition file under the node of the home directory will be generated.
 Specify the generated directory and run the cacti-cli.
 
-cacti-cli node/ArrayFort/{storage node}/
+```
+cacti-cli node/SNMPNetwork/{network node}/
+```
 
 AUTHOR
 -----------
